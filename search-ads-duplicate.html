@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyword Comparison</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Upload CSV Files</h2>
+        <form id="csvForm">
+            <div class="form-group">
+                <label for="currentCsv">Upload current.csv</label>
+                <input type="file" class="form-control-file" id="currentCsv" accept=".csv">
+            </div>
+            <div class="form-group">
+                <label for="incomingCsv">Upload incoming.csv</label>
+                <input type="file" class="form-control-file" id="incomingCsv" accept=".csv">
+            </div>
+            <div class="form-group">
+                <label for="incomingText">Enter incoming keywords (comma-separated)</label>
+                <textarea class="form-control" id="incomingText" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Compare Keywords</button>
+        </form>
+        <div id="resultSection" class="mt-4" style="display: none;">
+            <h3 id="newKeywordsHead">New Keywords</h3>
+            <p id="newKeywords"></p>
+            <button class="btn btn-secondary" id="copyButton">Copy to Clipboard</button>
+            <button class="btn btn-success" id="downloadButton">Download as CSV</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        document.getElementById('csvForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const currentCsv = document.getElementById('currentCsv').files[0];
+            const incomingCsv = document.getElementById('incomingCsv').files[0];
+            const incomingText = document.getElementById('incomingText').value.trim();
+
+            if (!currentCsv) {
+                alert('Please upload current.csv.');
+                return;
+            }
+
+
+            if (incomingCsv && incomingText) {
+                alert('Please provide either incoming.csv or incoming text, not both.');
+                return;
+            }
+
+            if (!incomingCsv && !incomingText) {
+                alert('Please provide add incoming.csv or incoming text');
+                return;
+            }
+
+            if (!currentCsv.name.endsWith('.csv')) {
+                alert('Please upload valid CSV files.');
+                return;
+            }
+
+            if (incomingCsv?.name && !incomingCsv.name?.endsWith('.csv')) {
+                alert('Please upload valid CSV files.');
+                return;
+            }
+
+
+            parseCSVFiles(currentCsv, incomingCsv, incomingText?.split(","));
+        });
+
+        function parseCSVFiles(currentFile, incomingFile, incomingDataArray) {
+            console.log("🔺  RAM - parseCSVFiles - incomingFile:", incomingFile)
+            console.log("🔺  RAM - parseCSVFiles - incomingDataArray:", incomingDataArray)
+            const currentKeywords = new Set();
+            const incomingKeywords = new Set();
+
+            Papa.parse(currentFile, {
+                header: true,
+                dynamicTyping: true,
+                complete: function (results) {
+                    if (!results.meta.fields.includes('Keyword')) {
+                        alert('Invalid format in current.csv. "Keyword" column is missing.');
+                        return;
+                    }
+                    results.data.forEach(row => {
+                        if (row['Keyword']) {
+                            currentKeywords.add(row['Keyword']);
+                        }
+                    });
+
+                    if (incomingFile) {
+                        Papa.parse(incomingFile, {
+                            header: true,
+                            dynamicTyping: true,
+                            complete: function (results) {
+                                if (!results.meta.fields.includes('Keyword')) {
+                                    alert('Invalid format in incoming.csv. "Keyword" column is missing.');
+                                    return;
+                                }
+                                results.data.forEach(row => {
+                                    if (row['Keyword']) {
+                                        incomingKeywords.add(row['Keyword']);
+                                    }
+                                });
+
+                                const newKeywords = [...incomingKeywords].filter(keyword => !currentKeywords.has(keyword));
+                                displayNewKeywords(newKeywords);
+                            }
+                        });
+                    } else if (incomingDataArray && Array.isArray(incomingDataArray)) {
+                        incomingDataArray.forEach(keyword => incomingKeywords.add(keyword));
+
+                        const newKeywords = [...incomingKeywords].filter(keyword => !currentKeywords.has(keyword));
+                        displayNewKeywords(newKeywords);
+                    } else {
+                        alert('No incoming data provided.');
+                    }
+                }
+            });
+        }
+
+
+        function formatKeywords(keywords) {
+            let formattedKeywords = '';
+            keywords.forEach((keyword, index) => {
+                formattedKeywords += keyword;
+                if ((index + 1) % 100 === 0) {
+                    formattedKeywords += '<br><br>';
+                } else {
+                    if (keywords.length - 1 !== index)
+                        formattedKeywords += ', ';
+                }
+            });
+            return formattedKeywords;
+        }
+
+
+
+        function displayNewKeywords(newKeywords) {
+            const resultSection = document.getElementById('resultSection');
+            const newKeywordsElement = document.getElementById('newKeywords');
+            const newKeywordsHead = document.getElementById('newKeywordsHead');
+            resultSection.style.display = 'block';
+
+            if (newKeywords.length === 0) {
+                newKeywordsElement.textContent = 'There are no new keywords found.';
+                newKeywordsHead.textContent = "New Keywords"
+            } else {
+                const formattedKeywords = formatKeywords(newKeywords);
+                newKeywordsHead.textContent = `New Keywords (${newKeywords.length})`;
+                newKeywordsElement.innerHTML = formattedKeywords;
+            }
+
+            document.getElementById('copyButton').addEventListener('click', function () {
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = newKeywords.join(', ');
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('Copied to clipboard!');
+            });
+
+            document.getElementById('downloadButton').addEventListener('click', function () {
+                if (newKeywords.length > 0) {
+                    downloadCSV(newKeywords);
+                } else {
+                    alert('No new keywords to download.');
+                }
+            });
+        }
+
+        function downloadCSV(newKeywords) {
+            const csvContent = 'Keyword\n' + newKeywords.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'newKeywords.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
