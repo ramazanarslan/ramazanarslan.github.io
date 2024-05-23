@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keyword Comparison</title>
+    <title>Apple Search Ads Keyword Comparison</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="mb-4">Upload CSV Files</h2>
-        <form id="csvForm">
-            <div class="form-group">
-                <label for="currentCsv">Upload current.csv</label>
-                <input type="file" class="form-control-file" id="currentCsv" accept=".csv">
+        <h2 class="mb-4">Upload Apple Search Ads Keywords CSV Files</h2>
+        <div class="row">
+            <div class="col-md-8">
+                <form id="csvForm">
+                    <div class="form-group">
+                        <label for="currentCsv">Upload current.csv</label>
+                        <input type="file" class="form-control-file" id="currentCsv" accept=".csv">
+                    </div>
+                    <div class="form-group">
+                        <label for="incomingCsv">Upload incoming.csv</label>
+                        <input type="file" class="form-control-file" id="incomingCsv" accept=".csv">
+                    </div>
+                    <div class="form-group">
+                        <label for="incomingText">Enter incoming keywords (comma-separated)</label>
+                        <textarea class="form-control" id="incomingText" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Compare Keywords</button>
+                </form>
             </div>
-            <div class="form-group">
-                <label for="incomingCsv">Upload incoming.csv</label>
-                <input type="file" class="form-control-file" id="incomingCsv" accept=".csv">
+            <div class="col-md-4 d-flex align-items-center">
+                <img src="preview.png" alt="Vertical Rectangle" class="img-fluid">
             </div>
-            <div class="form-group">
-                <label for="incomingText">Enter incoming keywords (comma-separated)</label>
-                <textarea class="form-control" id="incomingText" rows="3"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Compare Keywords</button>
-        </form>
-        <div id="resultSection" class="mt-4" style="display: none;">
+        </div>
+
+        <div id="resultSection" class="mt-4" style="display: none; padding-bottom: 20px;">
             <h3 id="newKeywordsHead">New Keywords</h3>
             <p id="newKeywords"></p>
             <button class="btn btn-secondary" id="copyButton">Copy to Clipboard</button>
@@ -73,8 +81,7 @@
         });
 
         function parseCSVFiles(currentFile, incomingFile, incomingDataArray) {
-            console.log("🔺  RAM - parseCSVFiles - incomingFile:", incomingFile)
-            console.log("🔺  RAM - parseCSVFiles - incomingDataArray:", incomingDataArray)
+
             const currentKeywords = new Set();
             const incomingKeywords = new Set();
 
