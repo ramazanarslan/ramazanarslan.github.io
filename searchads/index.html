@@ -122,13 +122,22 @@
                 header: true,
                 dynamicTyping: true,
                 complete: function (results) {
-                    if (!results.meta.fields.includes('Keyword')) {
-                        alert('Invalid format in current.csv. "Keyword" column is missing.');
+                    let currentKeywordRowName = "";
+                    if (results.meta.fields.includes('Keyword')) {
+                        currentKeywordRowName = 'Keyword'
+                    } else if (results.meta.fields.includes('Negative Keyword')) {
+
+                        currentKeywordRowName = 'Negative Keyword'
+                    }
+                    if (!currentKeywordRowName) {
+                        alert('Invalid format in current.csv. "Keyword or Negative Keyword" column is missing.');
                         return;
                     }
+
+
                     results.data.forEach(row => {
-                        if (row['Keyword']) {
-                            currentKeywords.add(row['Keyword']);
+                        if (row[currentKeywordRowName]) {
+                            currentKeywords.add(row[currentKeywordRowName]);
                         }
                     });
 
@@ -137,13 +146,23 @@
                             header: true,
                             dynamicTyping: true,
                             complete: function (results) {
-                                if (!results.meta.fields.includes('Keyword')) {
-                                    alert('Invalid format in incoming.csv. "Keyword" column is missing.');
+
+                                let incomingKeywordRowName = "";
+                                console.log("🔺  RAM - parseCSVFiles - results.meta.fields:", results.meta.fields)
+
+                                if (results.meta.fields.includes('Keyword')) {
+                                    incomingKeywordRowName = 'Keyword'
+                                } else if (results.meta.fields.includes('Negative Keyword')) {
+
+                                    incomingKeywordRowName = 'Negative Keyword'
+                                }
+                                if (!incomingKeywordRowName) {
+                                    alert('Invalid format in current.csv. "Keyword or Negative Keyword" column is missing.');
                                     return;
                                 }
                                 results.data.forEach(row => {
-                                    if (row['Keyword']) {
-                                        incomingKeywords.add(row['Keyword']);
+                                    if (row[incomingKeywordRowName]) {
+                                        incomingKeywords.add(row[incomingKeywordRowName]);
                                     }
                                 });
 
